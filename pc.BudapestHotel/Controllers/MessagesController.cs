@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http;
@@ -22,39 +23,44 @@ namespace pc.BudapestHotel
             }
             else
             {
-                HandleSystemMessage(activity);
+                await HandleSystemMessage(activity);
             }
-            var response = Request.CreateResponse(HttpStatusCode.OK);
-            return response;
+
+            return Request.CreateResponse(HttpStatusCode.OK);
         }
 
-        private Activity HandleSystemMessage(Activity message)
+        private async Task<Activity> HandleSystemMessage(Activity activity)
         {
-            if (message.Type == ActivityTypes.DeleteUserData)
+            if (activity.Type == ActivityTypes.DeleteUserData)
             {
                 // Implement user deletion here
                 // If we handle user deletion, return a real message
             }
-            else if (message.Type == ActivityTypes.ConversationUpdate)
+            else if (activity.Type == ActivityTypes.ConversationUpdate)
             {
-                // Handle conversation state changes, like members being added and removed
-                // Use Activity.MembersAdded and Activity.MembersRemoved and Activity.Action for info
-                // Not available in all channels
+                var updateActivity = activity.AsConversationUpdateActivity();
+                var botId = updateActivity.Recipient.Id;
+
+                //remove bot from the members added
+                updateActivity.MembersAdded = updateActivity.MembersAdded.Where(m => m.Id != botId).ToList();
+
+                foreach (var member in updateActivity.MembersAdded)
+                    await Conversation.SendAsync(activity, () => new Dialogs.RootDialog());
             }
-            else if (message.Type == ActivityTypes.ContactRelationUpdate)
+            else if (activity.Type == ActivityTypes.ContactRelationUpdate)
             {
                 // Handle add/remove from contact lists
                 // Activity.From + Activity.Action represent what happened
             }
-            else if (message.Type == ActivityTypes.Typing)
+            else if (activity.Type == ActivityTypes.Typing)
             {
                 // Handle knowing tha the user is typing
             }
-            else if (message.Type == ActivityTypes.Ping)
+            else if (activity.Type == ActivityTypes.Ping)
             {
             }
 
             return null;
         }
-    }
+}
 }
