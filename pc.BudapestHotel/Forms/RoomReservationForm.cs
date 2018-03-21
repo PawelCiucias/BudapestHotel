@@ -10,6 +10,7 @@ namespace pc.BudapestHotel.Forms
     [Serializable]
     class RoomReservationForm : IRoomReservation
     {
+        bool finalConfirmation = false;
         #region IRoomReservation 
         public string FullName { get; set; }
         public DateTime? CheckInDate { get; set; }
@@ -52,15 +53,18 @@ namespace pc.BudapestHotel.Forms
         }
         #endregion
 
-        public static IForm<IRoomReservation> BuildForm()
-            => new FormBuilder<IRoomReservation>()
+        public static IForm<RoomReservationForm> BuildForm()
+            => new FormBuilder<RoomReservationForm>()
             .Message("Let me help you book a room")
             .Field(nameof(FullName))
-            .Field(nameof(CheckInDate), state => !state.CheckInDate.HasValue)
+            .Field(nameof(CheckInDate), state => !state.CheckInDate.HasValue || state.finalConfirmation)
             .Field(nameof(CheckOutDate), state => !state.CheckOutDate.HasValue)
             .Field(nameof(Occupency), state => state.Occupency == 0)
             .AddRemainingFields()
-            .Confirm("are the following valid?{*}{||}")
+            .Confirm(
+                prompt: "are the following valid?{*}{||}",
+              condition: state => state.finalConfirmation = true,
+                dependencies: typeof(IRoomReservation).GetProperties().Select(p => p.Name))
 
             .Build();
 

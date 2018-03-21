@@ -15,7 +15,8 @@ using pc.BudapestHotel.ExtensionMethods;
 namespace pc.BudapestHotel.Dialogs
 {
     [Serializable]
-    [LuisModel("<ModelId>", "<subscriptionId>")]
+
+    [LuisModel("<ModelId>", "<subscriptionKey>")]
     public class RootDialog : LuisDialog<object>
     {
         #region Intents
@@ -93,7 +94,7 @@ namespace pc.BudapestHotel.Dialogs
                     Values.Add(entity);
             }
 
-            var form = new FormDialog<IRoomReservation>(new RoomReservationForm(Values.ToArray()), RoomReservationForm.BuildForm);
+            var form = new FormDialog<RoomReservationForm>(new RoomReservationForm(Values.ToArray()), RoomReservationForm.BuildForm);
             await context.Forward(form, RoomReservationCallBackAsync,null);
         }
 
